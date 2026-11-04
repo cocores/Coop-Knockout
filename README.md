@@ -32,6 +32,11 @@ A mascot boxing game for the browser. Regular people in chicken and barnyard ani
 
 In solo play either key set works, and Space also dodges. P / Esc pauses, M mutes.
 
+## Fight night
+- **Ring entrances:** before round 1, each fighter walks out under a spotlight while the announcer introduces them. Expect a fanfare, a nickname ("The Hog of War"), a fight record and who's inside the suit, followed by a crowd-pleasing pose. Then the referee calls them together for the rules. Tap or press Enter to skip.
+- **The referee** is a person in a zebra suit. He comes over to count knockdowns, chopping his arm on each count.
+- **The winner ceremony:** when the match is over, the ref walks to the middle of the ring and lifts the winner's glove high. Bells ring and confetti flies, while the loser slumps (or is still flat out with their head on its spring).
+
 ## Rules
 - Best of 3 rounds, 60 seconds each.
 - **Jab** is fast with low damage. **Hook** is slow and hits hard. Hitting someone during their wind-up is a **COUNTER** for bonus damage.

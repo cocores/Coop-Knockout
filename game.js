@@ -48,7 +48,7 @@ function layoutTouch() {
 }
 let wasPlaying = null;
 function syncPlaying() {
-  const playing = ['intro', 'fight', 'knockdown', 'roundEnd', 'paused'].includes(game.state);
+  const playing = ['entrance', 'intro', 'fight', 'knockdown', 'roundEnd', 'paused', 'matchEnd'].includes(game.state);
   if (playing === wasPlaying) return;
   wasPlaying = playing;
   document.body.classList.toggle('playing', playing);
@@ -154,6 +154,7 @@ const Sound = {
   thud() { this.tone(70, 0.4, 'sine', 0.6, -40); this.noise(0.25, 0.5, 300); },
   count() { this.tone(330, 0.12, 'triangle', 0.25); },
   crowd(vol = 0.2) { this.noise(1.2, vol, 900); this.noise(1.0, vol * 0.6, 1800, 0.1); },
+  fanfare(m = 1) { [523, 659, 784, 1046, 784, 1046].forEach((f, i) => this.tone(f * m, i > 3 ? 0.4 : 0.14, 'square', 0.07, 0, i * 0.13)); },
   crow() { this.tone(500, 0.15, 'sawtooth', 0.1, 300); this.tone(800, 0.5, 'sawtooth', 0.1, -350, 0.15); },
   select() { this.tone(660, 0.06, 'square', 0.08); },
   moo() { this.tone(150, 0.7, 'sawtooth', 0.12, -45); this.tone(152, 0.7, 'square', 0.04, -50); },
@@ -259,6 +260,7 @@ class Fighter {
     this.flash = 0; this.buffer = null; this.bufT = 0; this.walkT = 0;
     this.downT = 0; this.getupProgress = 0; this.dizzy = 0;
     this.popY = 0; this.popV = 0;
+    this.taunt = false; this.taunted = false; this.raised = false; this.raiseK = 0; this.dejected = false;
   }
   // springy costume head: popY = how far the head has popped up off the suit
   updatePop(dt, target) {
@@ -505,6 +507,9 @@ const game = {
   startRound() {
     this.fighters.forEach(f => f.resetRound());
     this.timer = ROUND_TIME;
+    this.camFocus = null;
+    if (this.round === 1) { beginEntrances(); return; }
+    refLeave();
     this.state = 'intro'; this.t = 0;
     Sound.bell(1);
   },
@@ -523,6 +528,8 @@ const game = {
     this.crowdHype = 1;
     // getting up gets harder each time
     this.need = 10 + 8 * f.knockdowns;
+    ref.speed = 340;
+    refGoTo(clamp(f.x + (f.x < WW / 2 ? 1 : -1) * 80, RING_L - 20, RING_R + 20), 'count', f.x);
   },
   endRound(winner, how) {
     this.state = 'roundEnd'; this.t = 0;
@@ -567,6 +574,8 @@ function update(dt) {
     return;
   }
 
+  if (game.state === 'entrance') { updateEntrance(dt); updateCamera(dt); updateFx(dt); return; }
+  updateRef(dt);
   updateCamera(dt);
   if (hitstop > 0) { hitstop -= dt; updateFx(dt * 0.2); return; }
 
@@ -614,16 +623,15 @@ function update(dt) {
     case 'roundEnd':
       if (game.t > 3.5) {
         if (p1.wins >= WINS_NEEDED || p2.wins >= WINS_NEEDED) {
-          game.state = 'matchEnd'; game.t = 0;
           const w = p1.wins >= WINS_NEEDED && p2.wins >= WINS_NEEDED ? null : p1.wins >= WINS_NEEDED ? p1 : p2;
-          game.winner = w;
-          if (w) { w.toIdle(); Sound.call(w.look); }
+          startCeremony(w);
         } else { game.round++; game.startRound(); }
       }
       break;
     case 'matchEnd':
-      if (game.t > 1.2) {
-        const [rb, mb] = twoButtons(300);
+      updateCeremony(dt);
+      if (game.ceremonyT > 2.2) {
+        const [rb, mb] = twoButtons(H - 62);
         if (pressed.has('KeyR') || hitRect(rb, clickPos)) game.start(game.mode);
         else if (pressed.has('Enter') || pressed.has('Space') || pressed.has('Escape') || hitRect(mb, clickPos)) game.state = 'title';
       }
@@ -667,6 +675,7 @@ function updateKnockdown(dt, intent) {
     Sound.select();
     Sound.crowd(0.25);
     game.state = 'intro'; game.t = 1.2; // short "FIGHT!" restart
+    ref.gesture = 'point'; setTimeout(() => { if (game.state !== 'knockdown') refLeave(); }, 500);
   }
 }
 
@@ -772,9 +781,246 @@ function drawSelect() {
   text(help, W / 2, H - 40, fz(16), '#ddd', 'center', null, 700);
 }
 
+// ---------------------------------------------------------------- referee (a person in a zebra suit)
+const REF_OFF = WW + 90;
+const ref = { x: REF_OFF, targetX: REF_OFF, facing: -1, walkT: 0, moving: false, gesture: 'none', k: 0, faceTo: null, handTo: null, speed: 300 };
+
+function refGoTo(x, gesture = 'none', faceTo = null) {
+  ref.targetX = x; ref.gesture = gesture; ref.faceTo = faceTo; ref.k = 0;
+}
+function refLeave() { refGoTo(REF_OFF); }
+
+function updateRef(dt) {
+  const d = ref.targetX - ref.x;
+  ref.moving = Math.abs(d) > 3;
+  if (ref.moving) {
+    ref.x += Math.sign(d) * Math.min(Math.abs(d), ref.speed * dt);
+    ref.walkT += dt; ref.facing = Math.sign(d);
+  } else if (ref.faceTo !== null) ref.facing = ref.faceTo > ref.x ? 1 : -1;
+}
+
+function drawReferee() {
+  const r = ref;
+  if (r.x > WW + 60 || r.x < -60) return;
+  ctx.save();
+  ctx.translate(r.x, GROUND);
+  ellipse(0, 4, 34, 8, 'rgba(0,0,0,0.25)');
+  ctx.scale(r.facing, 1);
+  const walk = r.moving ? Math.sin(r.walkT * 13) : 0;
+  const bob = r.moving ? -Math.abs(walk) * 3 : Math.sin(game.t * 4) * 1.5;
+  ctx.lineCap = 'round';
+  // trousers + shoes
+  for (const [lx, ph] of [[-8, walk], [8, -walk]]) {
+    ctx.strokeStyle = '#1d1d1d'; ctx.lineWidth = 13;
+    ctx.beginPath(); ctx.moveTo(lx, -72 + bob); ctx.lineTo(lx + ph * 12, -8); ctx.stroke();
+    roundRect(lx + ph * 12 - 7, -9, 20, 9, 4, '#000');
+  }
+  // hand targets (local coords)
+  const toLocal = p => ({ x: (p.x - r.x) * r.facing, y: p.y - GROUND });
+  let front = { x: 12, y: -92 }, back = { x: -12, y: -94 };
+  if (r.gesture === 'count') {
+    const k = 1 - Math.min(1, game.countT * 4); // chop down each second
+    front = { x: lerp(46, 26, k), y: lerp(-104, -196, k) };
+    back = { x: -8, y: -100 };
+  } else if (r.gesture === 'apart') {
+    const s = Math.sin(game.t * 3) * 6;
+    front = { x: 54, y: -146 + s }; back = { x: -52, y: -146 - s };
+  } else if (r.gesture === 'raise' && r.handTo) {
+    const t = toLocal(r.handTo);
+    front = { x: lerp(20, t.x, r.k), y: lerp(-110, t.y, r.k) };
+    back = { x: -14, y: -104 };
+  } else if (r.gesture === 'draw') {
+    const s = Math.sin(game.t * 6) * 6;
+    front = { x: 30, y: -204 + s }; back = { x: -24, y: -204 - s };
+  } else if (r.gesture === 'point') {
+    front = { x: 58, y: -150 }; back = { x: -12, y: -98 };
+  }
+  const sleeve = (sx, sy, h) => {
+    ctx.strokeStyle = '#111'; ctx.lineWidth = 12; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(h.x, h.y); ctx.stroke();
+    ctx.strokeStyle = '#fafafa'; ctx.lineWidth = 8; ctx.setLineDash([6, 5]); ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(h.x, h.y); ctx.stroke();
+    ctx.setLineDash([]);
+    circle(h.x, h.y, 7, '#fff');
+    ctx.strokeStyle = '#0005'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(h.x, h.y, 7, 0, 7); ctx.stroke();
+  };
+  sleeve(-6, -142 + bob, back);
+  // striped zebra-suit / referee shirt
+  ctx.save();
+  ctx.beginPath(); ctx.roundRect(-26, -154 + bob, 52, 86, 16); ctx.clip();
+  ctx.fillStyle = '#fafafa'; ctx.fillRect(-30, -160 + bob, 60, 96);
+  ctx.fillStyle = '#151515';
+  for (let i = -30; i < 30; i += 12) ctx.fillRect(i, -160 + bob, 6, 96);
+  ctx.restore();
+  ctx.fillStyle = '#111'; ctx.fillRect(-27, -76 + bob, 54, 7); // belt
+  // bow tie
+  ctx.fillStyle = '#111';
+  ctx.beginPath(); ctx.moveTo(12, -150 + bob); ctx.lineTo(4, -156 + bob); ctx.lineTo(4, -144 + bob); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(12, -150 + bob); ctx.lineTo(20, -156 + bob); ctx.lineTo(20, -144 + bob); ctx.fill();
+  // zebra head
+  ctx.save(); ctx.translate(6, -178 + bob);
+  ctx.fillStyle = '#111';
+  for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.moveTo(-18 + i * 6, -16 + i * 2); ctx.lineTo(-24 + i * 6, -30 + i * 2); ctx.lineTo(-12 + i * 6, -18 + i * 2); ctx.fill(); } // mane
+  ellipse(-6, -24, 5, 11, '#fafafa', -0.3); ellipse(4, -26, 5, 11, '#fafafa', 0.2); // ears
+  ellipse(0, 0, 21, 25, '#fafafa');
+  ctx.save(); ctx.beginPath(); ctx.ellipse(0, 0, 21, 25, 0, 0, 7); ctx.clip();
+  ctx.strokeStyle = '#151515'; ctx.lineWidth = 4;
+  for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.arc(-26, -14 + i * 11, 22, -0.5, 0.5); ctx.stroke(); }
+  ctx.restore();
+  ellipse(17, 12, 12, 10, '#2b2b2b'); // muzzle
+  circle(23, 9, 2, '#000');
+  circle(7, -6, 5, '#fff'); circle(8.5, -6, 2.6, '#111');
+  // whistle
+  ctx.strokeStyle = '#999'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(14, 18); ctx.lineTo(4, 30); ctx.stroke();
+  roundRect(1, 28, 9, 6, 2, '#c0c0c0');
+  ctx.restore();
+  sleeve(8, -140 + bob, front);
+  ctx.restore();
+}
+
+// ---------------------------------------------------------------- ring entrances (before round 1)
+const NICKNAMES = { NUGGET: 'The Crispy Crusher', 'BIG RED': 'The Cock-a-Doodle-Doom', 'BESSIE BRUISER': 'The Moo-ving Mountain', HAMHOCK: 'The Hog of War' };
+const E_P1 = 0.5, E_P2 = 4.2, E_REF = 7.9, E_END = 10.4;
+const homeX = f => (f.side === 0 ? RING_L + 130 : RING_R - 130);
+
+function beginEntrances() {
+  const [p1, p2] = game.fighters;
+  p1.x = -90; p2.x = WW + 90; p1.facing = 1; p2.facing = -1;
+  [p1, p2].forEach(f => { f.state = 'idle'; f.record = `${Math.floor(rand(9, 31))}-${Math.floor(rand(0, 8))}`; f.announced = false; });
+  ref.x = WW / 2; refGoTo(WW / 2, 'none', null); ref.facing = 1;
+  game.state = 'entrance'; game.t = 0;
+}
+
+function entranceWalk(f, dt) {
+  const d = homeX(f) - f.x;
+  if (Math.abs(d) > 3) {
+    f.x += Math.sign(d) * Math.min(Math.abs(d), 165 * dt);
+    f.state = 'walk'; f.walkT += dt; f.facing = Math.sign(d);
+    f.taunt = false;
+  } else {
+    f.x = homeX(f); f.state = 'idle'; f.facing = f.side === 0 ? 1 : -1;
+    if (!f.taunt && !f.taunted) { f.taunt = true; f.taunted = true; Sound.call(f.look); Sound.crowd(0.3); game.crowdHype = 1; }
+  }
+}
+
+function updateEntrance(dt) {
+  const [p1, p2] = game.fighters;
+  const t = game.t;
+  [p1, p2].forEach(f => { f.t += dt; f.updatePop(dt, 0); });
+  if (t > E_P1) {
+    if (!p1.announced) { p1.announced = true; Sound.fanfare(); }
+    entranceWalk(p1, dt);
+  }
+  if (t > E_P2) {
+    p1.taunt = false;
+    if (!p2.announced) { p2.announced = true; Sound.fanfare(1.12); }
+    entranceWalk(p2, dt);
+  }
+  if (t > E_REF) {
+    p2.taunt = false;
+    if (ref.gesture !== 'apart') { refGoTo(WW / 2, 'apart', null); Sound.tone(1800, 0.25, 'sine', 0.12); }
+  }
+  game.camFocus = t < E_P2 ? Math.max(p1.x, RING_L) : t < E_REF ? Math.min(p2.x, RING_R) : WW / 2;
+  const skip = t > 0.4 && (clickPos || pressed.has('Enter') || pressed.has('Space') || pressed.has('KeyF') || pressed.has('KeyJ'));
+  if (t > E_END || skip) finishEntrances();
+  updateRef(dt);
+  game.crowdHype = Math.max(game.crowdHype, 0.3);
+}
+
+function finishEntrances() {
+  game.fighters.forEach(f => { f.x = homeX(f); f.facing = f.side === 0 ? 1 : -1; f.taunt = false; f.state = 'idle'; });
+  game.camFocus = null;
+  refLeave();
+  game.state = 'intro'; game.t = 0;
+  Sound.bell(1);
+}
+
+function drawEntranceOverlay() {
+  const [p1, p2] = game.fighters;
+  const t = game.t;
+  const f = t < E_P2 ? p1 : t < E_REF ? p2 : null;
+  // spotlight on whoever is being announced
+  const fx = (f ? f.x : WW / 2) - (game.camX || 0);
+  const g = ctx.createRadialGradient(fx, GROUND - 110, 70, fx, GROUND - 110, 300);
+  g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,0.62)');
+  ctx.fillStyle = g; ctx.fillRect(-20, -20, W + 40, H + 40);
+  // announcer card
+  const since = f ? t - (f === p1 ? E_P1 : E_P2) : t - E_REF;
+  const slide = easeOut(Math.min(1, since * 3));
+  ctx.save(); ctx.translate((1 - slide) * (f === p2 ? W : -W), 0);
+  ctx.fillStyle = 'rgba(0,0,0,0.65)'; ctx.fillRect(0, 34, W, compact ? 168 : 150);
+  ctx.fillStyle = f === p2 ? '#1e63d6' : f === p1 ? '#c62828' : '#e8c15a'; ctx.fillRect(0, 34, W, 5);
+  if (f) {
+    const L = f.look;
+    text(f === p1 ? 'IN THE RED CORNER...' : 'AND IN THE BLUE CORNER...', W / 2, 60, fz(20), f === p1 ? '#ff8a80' : '#82b1ff', 'center', '#000', 800);
+    if (since > 0.5) {
+      text(`"${NICKNAMES[L.name] || 'The Contender'}"`, W / 2, 90, fz(22), '#e8c15a', 'center', '#000', 700);
+      text(L.name + '!', W / 2, 128, fz(52), '#fff', 'center', '#3a0606');
+      const info = compact ? `${L.person.bio} · Record ${f.record}` : `Record ${f.record}  ·  inside the ${L.suit.toLowerCase()}: ${L.person.bio}`;
+      text(info, W / 2, compact ? 172 : 166, fz(16), '#ddd', 'center', '#000', 600);
+    }
+  } else {
+    text('THE REFEREE:', W / 2, 62, fz(20), '#e8c15a', 'center', '#000', 800);
+    text('"Keep it clean! No pecking,', W / 2, 100, fz(30), '#fff');
+    text('no biting, no tail-pulling!"', W / 2, 140, fz(30), '#fff');
+  }
+  ctx.restore();
+  if (t > 0.6) text(isTouch ? 'tap to skip' : 'Enter / click to skip', W - 12, H - 16, 13, '#fff9', 'right', '#000', 600);
+}
+
+// ---------------------------------------------------------------- winner ceremony
+function startCeremony(w) {
+  const [p1, p2] = game.fighters;
+  game.state = 'matchEnd'; game.t = 0; game.winner = w; game.ceremonyT = 0; game.cheered = false;
+  const cx = clamp((p1.x + p2.x) / 2, RING_L + 80, RING_R - 80);
+  game.fighters.forEach(f => {
+    f.taunt = false; f.raised = false; f.raiseK = 0;
+    if (f !== w && f.state !== 'ko') { f.toIdle(); f.dejected = true; }
+  });
+  if (w) { w.toIdle(); w.raised = true; refGoTo(cx, 'none', null); }
+  else refGoTo(cx, 'draw', null);
+  ref.speed = 300;
+}
+
+function updateCeremony(dt) {
+  const w = game.winner;
+  game.camFocus = ref.x;
+  if (!w) {
+    if (!ref.moving) game.ceremonyT += dt;
+  } else if (!ref.moving) {
+    const side = w.x < ref.x ? -1 : 1;
+    const tx = clamp(ref.x + side * 86, RING_L - 30, RING_R + 30);
+    const d = tx - w.x;
+    if (Math.abs(d) > 3) {
+      w.x += Math.sign(d) * Math.min(Math.abs(d), 170 * dt);
+      w.state = 'walk'; w.walkT += dt * (Math.sign(d) === -side ? 1 : -1);
+    } else {
+      w.x = tx; w.state = 'idle';
+      game.ceremonyT += dt;
+    }
+    w.facing = -side; ref.facing = side;
+    ref.gesture = 'raise';
+    const ct = game.ceremonyT;
+    const k = clamp((ct - 1.0) / 0.35, 0, 1);
+    w.raiseK = k; ref.k = k;
+    // winner's raised glove in world coordinates (matches poseFor 'raised')
+    ref.handTo = { x: w.x + w.facing * lerp(46, 40, k), y: GROUND + lerp(-84, -198, k) + OY + 16 };
+  }
+  if (game.ceremonyT > 1.1 && !game.cheered) {
+    game.cheered = true;
+    Sound.bell(2); Sound.crowd(0.45); game.crowdHype = 1;
+    if (w) {
+      Sound.call(w.look);
+      for (const c of ['#ff5252', '#ffd54f', '#69f0ae', '#40c4ff', '#e040fb']) feathers(w.x, GROUND - 230, 10, c);
+    }
+  }
+  if (game.cheered && Math.random() < dt * 4 && w) {
+    feathers(w.x + rand(-200, 200), GROUND - 300, 2, ['#ff5252', '#ffd54f', '#69f0ae', '#40c4ff'][Math.floor(rand(4))]);
+  }
+}
+
 function updateCamera(dt) {
   let target = (WW - W) / 2;
-  if (W < WW && game.fighters.length) {
+  if (W < WW && game.camFocus != null) target = clamp(game.camFocus - W / 2, 0, WW - W);
+  else if (W < WW && game.fighters.length) {
     const [a, b] = game.fighters;
     target = clamp((a.x + b.x) / 2 - W / 2, 0, WW - W);
   }
@@ -941,9 +1187,15 @@ function poseFor(f) {
     case 'down': case 'ko': // slumped, arms dangling
       p.ko = true; p.lean = -8; p.drop = 8; p.front = { x: 28, y: -40 }; p.back = { x: 8, y: -46 }; break;
   }
-  if (game.state === 'matchEnd' && game.winner === f) { // victory pose
+  if (f.taunt) { // entrance showboating
     const w = Math.sin(game.t * 8) * 6;
     p.front = { x: 34, y: -150 + w }; p.back = { x: 4, y: -150 - w }; p.bob = Math.abs(Math.sin(game.t * 6)) * -10;
+  }
+  if (f.dejected) { p.lean = -4; p.drop = 6; p.front = { x: 30, y: -48 }; p.back = { x: 10, y: -54 }; p.headTilt = 0.35; }
+  if (f.raised && f.state === 'idle') { // ref holds the winner's glove up
+    const k = f.raiseK;
+    p.front = { x: lerp(46, 40, k), y: lerp(-84, -198, k) }; p.bob = 0; p.lean = 0; p.drop = 0;
+    if (k > 0.95) p.back = { x: 8, y: -146 + Math.sin(game.t * 10) * 8 };
   }
   return p;
 }
@@ -1283,11 +1535,14 @@ function draw() {
   inWorld(game.camX || 0, () => {
     drawBackground();
     const fs = [...game.fighters].sort((a, b) => (a.state === 'attack') - (b.state === 'attack'));
+    const refFront = game.state === 'entrance';
+    if (!refFront) drawReferee();
     fs.forEach(drawFighter);
+    if (refFront) drawReferee();
     drawParticles();
     drawFrontRopes();
   });
-  drawHUD();
+  if (game.state !== 'entrance' && game.state !== 'matchEnd') drawHUD();
 
   if (flashScreen > 0) { ctx.fillStyle = `rgba(255,255,255,${flashScreen * 0.5})`; ctx.fillRect(-20, -20, W + 40, H + 40); }
 
@@ -1312,16 +1567,22 @@ function draw() {
     case 'roundEnd':
       drawCenterBanner(game.msg, game.subMsg, game.msg.startsWith('TIME') ? '#ffe066' : '#ff5a3c');
       break;
+    case 'entrance': drawEntranceOverlay(); break;
     case 'matchEnd': {
-      const w = game.winner;
-      ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(0, 140, W, 230);
-      if (w) {
-        text(w.look.name + ' WINS!', W / 2, 196, fz(70), '#ffe066', 'center', '#3a0606');
-        const sub = game.mode === 1 ? (w.side === 0 ? 'You are the Champion of the Coop! 🏆' : 'You got plucked. Try again!') : `${game.playerLabel(w)} rules the roost!`;
-        text(sub, W / 2, 252, fz(26), '#fff');
-      } else text('IT\'S A DRAW!', W / 2, 210, fz(70), '#ffe066');
-      if (game.t > 1.2) {
-        const [rb, mb] = twoButtons(300);
+      const w = game.winner, ct = game.ceremonyT;
+      if (game.t > 0.4) {
+        ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(0, 34, W, 140);
+        if (!w) text("IT'S A DRAW!", W / 2, 100, fz(64), '#ffe066', 'center', '#3a0606');
+        else if (ct < 1.1) text('AND THE WINNER IS...', W / 2, 100, fz(48), '#fff', 'center', '#3a0606');
+        else {
+          const pop = easeOut(Math.min(1, (ct - 1.1) * 4));
+          text(w.look.name + '!', W / 2, 88, fz(64) * (0.6 + 0.4 * pop), '#ffe066', 'center', '#3a0606');
+          const sub = game.mode === 1 ? (w.side === 0 ? 'You are the Champion of the Coop! 🏆' : 'You got plucked. Try again!') : `${game.playerLabel(w)} rules the roost!`;
+          text(sub, W / 2, 144, fz(24), '#fff');
+        }
+      }
+      if (ct > 2.2) {
+        const [rb, mb] = twoButtons(H - 62);
         drawButton(rb, isTouch ? 'REMATCH' : 'REMATCH (R)', true);
         drawButton(mb, isTouch ? 'MENU' : 'MENU (Enter)', false);
       }
