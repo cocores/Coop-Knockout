@@ -1,6 +1,14 @@
 # Coop Knockout 🐔🥊
 
-A chicken boxing game for the browser. Nugget and Big Red fight for the featherweight championship of the barnyard.
+A mascot boxing game for the browser. Regular people in chicken and barnyard animal costumes slug it out in the ring. Knock one out and their costume head **pops up on a spring**, revealing the sweaty human inside.
+
+## The fighters
+| Mascot | Suit | Inside the suit | Special |
+|---|---|---|---|
+| Nugget | Chicken | Gary, 44, accounts payable | Nugget Nuke |
+| Big Red | Rooster | Denise, 31, yoga instructor | Rooster Rocket |
+| Bessie Bruiser | Cow | Kevin, 27, substitute teacher | Udder Destruction |
+| Hamhock | Pig | Margaret, 71, retired | Ham Hammer |
 
 **To play,** open `index.html` in any modern browser. There's nothing to install or build.
 
@@ -26,6 +34,7 @@ In solo play either key set works, and Space also dodges. P / Esc pauses, M mute
 - **Jab** is fast with low damage. **Hook** is slow and hits hard. Hitting someone during their wind-up is a **COUNTER** for bonus damage.
 - **Block** cuts damage but drains stamina. If your stamina runs out, your guard breaks.
 - **Stamina** is spent on punches and dodges. When you're tired, you move and punch slower and weaker.
-- **Special meter** fills as you land and take hits. When it's full, unleash the **Rooster Rocket**, a dashing haymaker.
-- When health hits 0 you're **knocked down**. Mash punch keys to get up before the count of 10. Each knockdown makes getting up harder, and three knockdowns in a round is a **T.K.O.**
+- Big hits make your costume head wobble on its spring.
+- **Special meter** fills as you land and take hits. When it's full, unleash your mascot's special, a dashing haymaker.
+- When health hits 0 your head **pops off** (BOING!). Mash punch keys to shove it back on before the count of 10. Each knockdown makes getting up harder, and three knockdowns in a round is a **T.K.O.**
 - If time runs out, the round goes to whoever has more health, with a penalty for each knockdown.
