@@ -15,7 +15,10 @@ A mascot boxing game for the browser. Regular people in chicken and barnyard ani
 ## Modes
 - **1 Player vs CPU**: Easy, Normal or Hard
 - **2 Players** on the same keyboard
-- On-screen touch buttons for phones and tablets (Player 1)
+- **Phones and tablets:** on-screen touch buttons for Player 1.
+  - **Held sideways:** the whole ring fills the screen, and the buttons sit in the side margins so they never cover the fight.
+  - **Held upright:** the camera zooms in and follows the fighters, with a full-size control pad below.
+  - Tap ❚❚ to pause or quit.
 
 ## Controls
 | Action  | Player 1 | Player 2 |

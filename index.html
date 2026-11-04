@@ -2,37 +2,63 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#1a0f08">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <title>Coop Knockout</title>
 <style>
   html, body {
-    margin: 0; height: 100%; background: #1a0f08; overflow: hidden;
+    margin: 0; height: 100%; background: #1a0f08; overflow: hidden; overscroll-behavior: none;
     font-family: "Trebuchet MS", system-ui, sans-serif;
-    touch-action: none; user-select: none; -webkit-user-select: none;
+    touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
   }
+  body { position: fixed; inset: 0; }
   #wrap { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
-  canvas { display: block; background: #3b2414; image-rendering: auto; box-shadow: 0 0 40px #000; }
-  #touch { position: fixed; left: 0; right: 0; bottom: 0; display: none; justify-content: space-between;
-    padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); pointer-events: none; }
-  #touch .grp { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; pointer-events: auto; }
-  #touch .grp.right { justify-content: flex-end; max-width: 60%; }
+  canvas { display: block; background: #3b2414; box-shadow: 0 0 40px #000; }
+
+  /* ---- touch controls (shown only on touch devices, during a fight) ---- */
+  #touch { position: fixed; display: none; pointer-events: none; z-index: 2; }
+  body.touch.playing #touch { display: flex; }
+  #touch .grp { display: flex; gap: 8px; pointer-events: auto; }
   #touch button {
-    width: 64px; height: 64px; border-radius: 50%; border: 3px solid #fff8; color: #fff;
-    background: #0007; font: bold 13px "Trebuchet MS", sans-serif; touch-action: none;
+    width: 64px; height: 64px; border-radius: 50%; border: 3px solid #ffffff88; color: #fff; padding: 0;
+    background: #0000008c; font: bold 13px "Trebuchet MS", sans-serif; touch-action: none; pointer-events: auto;
   }
-  #touch button.big { width: 76px; height: 76px; background: #b3261e99; }
-  #touch button.special { background: #e0a10099; }
-  #touch button:active, #touch button.on { background: #fff6; }
-  body.touch #touch { display: flex; }
+  #touch button.big { background: #b3261ecc; }
+  #touch button.special { background: #e0a100cc; font-size: 11px; }
+  #touch button.on { background: #ffffff80; transform: scale(0.94); }
+  #pauseBtn { position: absolute; font-size: 16px !important; }
+
+  /* phone/tablet held sideways: game centred, buttons live in the side gutters */
+  body.landscape #touch { inset: 0; justify-content: space-between; align-items: center;
+    padding: 0 max(8px, env(safe-area-inset-right)) 0 max(8px, env(safe-area-inset-left)); }
+  body.landscape #touch .grp { flex-direction: column; }
+  body.landscape #touch button { width: min(66px, 14.5vh); height: min(66px, 14.5vh); }
+  body.landscape #touch button, body.landscape #touch button.special { font-size: 10.5px; letter-spacing: -0.2px; }
+  body.landscape #pauseBtn { top: max(8px, env(safe-area-inset-top)); right: max(8px, env(safe-area-inset-right));
+    width: 42px !important; height: 42px !important; }
+
+  /* phone held upright: game on top, control pad below */
+  body.portrait.playing #wrap { align-items: flex-start; padding-top: env(safe-area-inset-top); }
+  body.portrait #touch { left: 0; right: 0; bottom: 0; align-items: center; justify-content: space-between;
+    padding: 20px max(14px, env(safe-area-inset-left)) calc(14px + env(safe-area-inset-bottom));
+    background: linear-gradient(#2a170c, #140a05); border-top: 3px solid #7a1010; box-sizing: border-box; }
+  body.portrait #touch .grp { display: grid; grid-template-columns: auto auto; gap: 12px; }
+  body.portrait #touch button { width: min(84px, 21vw); height: min(84px, 21vw); font-size: 14px; }
+  body.portrait #touch .grp.left button.wide { grid-column: span 2; width: 100%; border-radius: 40px; height: min(64px, 16vw); }
+  body.portrait #pauseBtn { top: 10px; left: 50%; transform: translateX(-50%); width: 46px !important; height: 46px !important; }
 </style>
 </head>
 <body>
 <div id="wrap"><canvas id="game" width="960" height="540"></canvas></div>
 <div id="touch">
-  <div class="grp">
-    <button data-key="KeyA">◀</button>
-    <button data-key="KeyD">▶</button>
-    <button data-key="KeyS">BLOCK</button>
+  <button id="pauseBtn" data-key="KeyP" aria-label="Pause">❚❚</button>
+  <div class="grp left">
+    <button data-key="KeyA" aria-label="Left">◀</button>
+    <button data-key="KeyD" aria-label="Right">▶</button>
+    <button data-key="KeyS" class="wide">BLOCK</button>
   </div>
   <div class="grp right">
     <button data-key="KeyW">DODGE</button>
