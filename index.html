@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Coop Knockout</title>
+<style>
+  html, body {
+    margin: 0; height: 100%; background: #1a0f08; overflow: hidden;
+    font-family: "Trebuchet MS", system-ui, sans-serif;
+    touch-action: none; user-select: none; -webkit-user-select: none;
+  }
+  #wrap { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+  canvas { display: block; background: #3b2414; image-rendering: auto; box-shadow: 0 0 40px #000; }
+  #touch { position: fixed; left: 0; right: 0; bottom: 0; display: none; justify-content: space-between;
+    padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); pointer-events: none; }
+  #touch .grp { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; pointer-events: auto; }
+  #touch .grp.right { justify-content: flex-end; max-width: 60%; }
+  #touch button {
+    width: 64px; height: 64px; border-radius: 50%; border: 3px solid #fff8; color: #fff;
+    background: #0007; font: bold 13px "Trebuchet MS", sans-serif; touch-action: none;
+  }
+  #touch button.big { width: 76px; height: 76px; background: #b3261e99; }
+  #touch button.special { background: #e0a10099; }
+  #touch button:active, #touch button.on { background: #fff6; }
+  body.touch #touch { display: flex; }
+</style>
+</head>
+<body>
+<div id="wrap"><canvas id="game" width="960" height="540"></canvas></div>
+<div id="touch">
+  <div class="grp">
+    <button data-key="KeyA">◀</button>
+    <button data-key="KeyD">▶</button>
+    <button data-key="KeyS">BLOCK</button>
+  </div>
+  <div class="grp right">
+    <button data-key="KeyW">DODGE</button>
+    <button data-key="KeyH" class="special">SPECIAL</button>
+    <button data-key="KeyG" class="big">HOOK</button>
+    <button data-key="KeyF" class="big">JAB</button>
+  </div>
+</div>
+<script src="game.js"></script>
+</body>
+</html>
