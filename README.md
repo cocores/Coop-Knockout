@@ -3,17 +3,40 @@
 A mascot boxing game for the browser. Regular people in chicken and barnyard animal costumes slug it out in the ring. Knock one out and their costume head **pops up on a spring**, revealing the sweaty human inside.
 
 ## The fighters
+**Core five** (always available):
+
 | Mascot | Suit | Inside the suit | Special |
 |---|---|---|---|
 | Nugget | Chicken | Gary, 44, accounts payable | Nugget Nuke |
 | Big Red | Rooster | Denise, 31, yoga instructor | Rooster Rocket |
 | Bessie Bruiser | Cow | Kevin, 27, substitute teacher | Udder Destruction |
 | Hamhock | Pig | Margaret, 71, retired | Ham Hammer |
+| Puddles | Duck | Brenda, 38, dental hygienist | Quack Attack |
+
+**Unlockables** (win them in the Barnyard Ladder):
+
+| Mascot | Suit | Inside the suit | Special |
+|---|---|---|---|
+| Billy Buttz | Goat | Tony, 52, school bus driver | Headbutt Havoc |
+| Baa-barian | Sheep | Priya, 29, software tester | Fleece Fury |
+| Gobbles | Turkey | Walt, 63, crossing guard | Drumstick Drubbing |
+| Neigh-Sayer | Horse | Juan, 35, wedding DJ | Hoof Hurricane |
+| 👑 Golden Goose (boss) | Gold-plated goose | Mr. Finch, 80, owns the barn | Golden Egg Bomb |
+
+The unlockable fighters have slightly different power and speed.
+
+## Barnyard Ladder
+Pick a fighter and climb six rungs: Round 1, Round 2, the Quarterfinal and the Semifinal, then a **Challenger** and the **Championship**. The computer gets tougher at every rung.
+- The **Challenger** is a mystery fighter you haven't unlocked yet. Beat them to unlock them.
+- The **Championship** is against the Golden Goose. Beat the boss to unlock it.
+- Lose a fight and you can retry it.
+- Unlocks are saved in your browser. It takes four ladder wins to unlock everyone.
 
 **To play,** open `index.html` in any modern browser. There's nothing to install or build.
 
 ## Modes
-- **1 Player vs CPU**: Easy, Normal or Hard
+- **Barnyard Ladder:** a 1-player climb that unlocks new fighters (see above)
+- **Quick Match vs CPU:** Easy, Normal or Hard
 - **2 Players** on the same keyboard
 - **Phones and tablets:** on-screen touch buttons for Player 1.
   - **Held sideways:** the whole ring fills the screen, and the buttons sit in the side margins so they never cover the fight.

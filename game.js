@@ -169,15 +169,27 @@ const Sound = {
     g.gain.setValueAtTime(0.35, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.85);
     o.connect(g).connect(this.ctx.destination); o.start(t); lfo.start(t); o.stop(t + 0.9); lfo.stop(t + 0.9);
   },
+  quack() { this.tone(330, 0.12, 'sawtooth', 0.12, -140); this.tone(310, 0.13, 'sawtooth', 0.1, -140, 0.16); },
+  honk() { this.tone(430, 0.28, 'square', 0.12, -100); this.tone(215, 0.28, 'sawtooth', 0.05, -50); },
+  gobble() { for (let i = 0; i < 7; i++) this.tone(560 - i * 25, 0.05, 'square', 0.08, -120, i * 0.055); },
+  bleat(p = 1) { for (let i = 0; i < 5; i++) this.tone(520 * p, 0.07, 'sawtooth', 0.08, -40, i * 0.07); },
+  neigh() { this.tone(1150, 0.6, 'sawtooth', 0.07, -850); for (let i = 0; i < 6; i++) this.tone(900 - i * 90, 0.06, 'square', 0.04, 0, i * 0.08); },
   voice(look, pitch = 1) {
-    if (look.type === 'cow') this.moo();
-    else if (look.type === 'pig') this.oink();
-    else this.cluck(look.voice * pitch);
+    switch (look.type) {
+      case 'cow': this.moo(); break;
+      case 'pig': this.oink(); break;
+      case 'duck': this.quack(); break;
+      case 'goose': this.honk(); break;
+      case 'turkey': this.gobble(); break;
+      case 'goat': this.bleat(0.85); break;
+      case 'sheep': this.bleat(1.15); break;
+      case 'horse': this.neigh(); break;
+      default: this.cluck(look.voice * pitch);
+    }
   },
   call(look) {
-    if (look.type === 'cow') this.moo();
-    else if (look.type === 'pig') { this.oink(); setTimeout(() => this.oink(), 220); }
-    else this.crow();
+    if (look.type === 'chicken' || look.type === 'rooster') this.crow();
+    else { this.voice(look); setTimeout(() => this.voice(look), 260); }
   },
 };
 
@@ -243,7 +255,37 @@ const ROSTER = [
   { name: 'HAMHOCK', type: 'pig', suit: 'Pig suit', body: '#f6aebf', shade: '#e48aa0', shorts: '#6a1b9a', trim: '#f8bbd0', glove: '#8e24aa',
     comb: '#f29bb0', voice: 1, special: 'HAM HAMMER',
     person: { name: 'MARGARET', bio: 'Margaret, 71, retired', skin: '#d9a07a', hair: '#bdbdbd', style: 'bun' } },
+  { name: 'PUDDLES', type: 'duck', suit: 'Duck suit', body: '#ffe066', shade: '#f2c230', shorts: '#00695c', trim: '#fff', glove: '#00a693',
+    tail: ['#ffe066', '#f2c230'], comb: '#ff8c1a', voice: 1, special: 'QUACK ATTACK',
+    person: { name: 'BRENDA', bio: 'Brenda, 38, dental hygienist', skin: '#f0c8a8', hair: '#7a3b1a', style: 'long' } },
+  // ---- unlockables (win them in the Barnyard Ladder)
+  { name: 'BILLY BUTTZ', type: 'goat', suit: 'Goat suit', body: '#ece6da', shade: '#c4baa8', shorts: '#212121', trim: '#ef6c00', glove: '#ef6c00',
+    comb: '#c4baa8', special: 'HEADBUTT HAVOC', locked: true, power: 1.1, speed: 0.95,
+    person: { name: 'TONY', bio: 'Tony, 52, school bus driver', skin: '#e3b48c', hair: '#9e9e9e', style: 'short' } },
+  { name: 'BAA-BARIAN', type: 'sheep', suit: 'Sheep suit', body: '#f7f4ec', shade: '#ddd6c8', face: '#2d2d2d', legs: '#2d2d2d', shorts: '#37474f', trim: '#ec407a', glove: '#ec407a',
+    comb: '#2d2d2d', special: 'FLEECE FURY', locked: true, power: 0.95, speed: 1.1,
+    person: { name: 'PRIYA', bio: 'Priya, 29, software tester', skin: '#b07a52', hair: '#1b1b1b', style: 'bun' } },
+  { name: 'GOBBLES', type: 'turkey', suit: 'Turkey suit', body: '#6d4c3d', shade: '#4e342e', head: '#e57373', shorts: '#bf360c', trim: '#fdd835', glove: '#fdd835',
+    tail: ['#8d6e63', '#ff7043', '#ffca28', '#5d4037'], comb: '#d32f2f', special: 'DRUMSTICK DRUBBING', locked: true, power: 1.05, speed: 1,
+    person: { name: 'WALT', bio: 'Walt, 63, crossing guard', skin: '#f0c4a0', hair: '#e0e0e0', style: 'bald' } },
+  { name: 'NEIGH-SAYER', type: 'horse', suit: 'Horse suit', body: '#8d5524', shade: '#6b3f1a', mane: '#2b1a10', shorts: '#fafafa', trim: '#00acc1', glove: '#00acc1',
+    comb: '#6b3f1a', special: 'HOOF HURRICANE', locked: true, power: 1.15, speed: 0.9,
+    person: { name: 'JUAN', bio: 'Juan, 35, wedding DJ', skin: '#c68e5e', hair: '#1b1b1b', style: 'short' } },
+  { name: 'GOLDEN GOOSE', type: 'goose', suit: 'Gold-plated goose suit', body: '#f5d76e', shade: '#d4a017', shorts: '#4a148c', trim: '#ffd700', glove: '#b8860b',
+    tail: ['#f5d76e', '#e6bf3f', '#d4a017'], comb: '#ff8f00', legs: '#ff8f00', special: 'GOLDEN EGG BOMB', locked: true, boss: true, power: 1.2, speed: 1.1,
+    person: { name: 'MR. FINCH', bio: 'Mr. Finch, 80, owns the barn', skin: '#efc9a6', hair: '#f5f5f5', style: 'bald' } },
 ];
+const BIRDS = ['chicken', 'rooster', 'duck', 'goose', 'turkey'];
+
+// unlocked fighters are saved in this browser
+const SAVE_KEY = 'coopKnockout.unlocked';
+let unlocked = new Set();
+try { unlocked = new Set(JSON.parse(localStorage.getItem(SAVE_KEY) || '[]')); } catch (e) { /* storage blocked */ }
+const isUnlocked = i => !ROSTER[i].locked || unlocked.has(ROSTER[i].name);
+function unlockFighter(i) {
+  unlocked.add(ROSTER[i].name);
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify([...unlocked])); } catch (e) { /* storage blocked */ }
+}
 
 class Fighter {
   constructor(look, side) {
@@ -334,7 +376,7 @@ class Fighter {
         }
         let dir = 0;
         if (canAct) { if (intent.left) dir -= 1; if (intent.right) dir += 1; }
-        const speed = this.stamina < 20 ? 150 : 210;
+        const speed = (this.stamina < 20 ? 150 : 210) * (this.look.speed || 1);
         if (dir) {
           this.vx = lerp(this.vx, dir * speed, 1 - Math.pow(0.0001, dt));
           if (this.state !== 'walk') { this.state = 'walk'; this.t = 0; }
@@ -415,7 +457,7 @@ function tryHit(att, def, a) {
   }
   const counter = def.state === 'attack' && def.atkPhase === 'start';
   let dmg = a.dmg * (counter ? 1.35 : 1) * (att.stamina < 20 && a !== ATK.special ? 0.75 : 1);
-  dmg = Math.round(dmg * rand(0.9, 1.1));
+  dmg = Math.round(dmg * (att.look.power || 1) * rand(0.9, 1.1));
   def.takeHit(dmg, a.kb, a.stun, att.facing);
   att.special = Math.min(100, att.special + a.meter);
   def.special = Math.min(100, def.special + dmg * 0.5);
@@ -439,6 +481,7 @@ const DIFF = {
   EASY:   { think: 0.5,  react: 0.15, block: 0.25, aggr: 0.35, getup: 0.45 },
   NORMAL: { think: 0.3,  react: 0.4,  block: 0.4,  aggr: 0.55, getup: 0.7 },
   HARD:   { think: 0.17, react: 0.68, block: 0.55, aggr: 0.72, getup: 0.9 },
+  BOSS:   { think: 0.13, react: 0.78, block: 0.6,  aggr: 0.8,  getup: 1.0 },
 };
 
 class AI {
@@ -499,7 +542,8 @@ const game = {
   start(mode) {
     this.mode = mode;
     this.fighters = [new Fighter(ROSTER[this.sel.p1], 0), new Fighter(ROSTER[this.sel.p2], 1)];
-    this.ai = mode === 1 ? new AI(this.level) : null;
+    this.aiLevel = this.ladder ? this.ladder.levels[this.ladder.pos] : this.level;
+    this.ai = mode === 1 ? new AI(this.aiLevel) : null;
     this.round = 1;
     particles.length = 0; popups.length = 0;
     this.startRound();
@@ -540,20 +584,21 @@ const game = {
     Sound.bell(3); Sound.crowd(0.3);
   },
   playerLabel(f) {
-    if (this.mode === 1) return f.side === 0 ? 'YOU' : 'CPU ' + this.level;
+    if (this.mode === 1) return f.side === 0 ? 'YOU' : 'CPU ' + this.aiLevel;
     return f.side === 0 ? 'P1' : 'P2';
   },
 };
 
 const MENU = [
-  { label: () => '1 PLAYER  vs CPU', act: () => openSelect(1) },
+  { label: () => '🏆 BARNYARD LADDER', act: () => openSelect(1, true) },
+  { label: () => 'QUICK MATCH  vs CPU', act: () => openSelect(1) },
   { label: () => (isTouch ? '2 PLAYERS  (needs keyboard)' : '2 PLAYERS  (same keyboard)'), act: () => openSelect(2) },
-  { label: () => `DIFFICULTY:  ◀ ${game.level} ▶`, act: dir => cycleLevel(dir || 1), cycle: true },
+  { label: () => `QUICK MATCH CPU:  ◀ ${game.level} ▶`, act: dir => cycleLevel(dir || 1), cycle: true },
   { label: () => `SOUND:  ${Sound.muted ? 'OFF' : 'ON'}`, act: () => { Sound.muted = !Sound.muted; } },
 ];
 const LEVELS = ['EASY', 'NORMAL', 'HARD'];
 function cycleLevel(dir) { game.level = LEVELS[(LEVELS.indexOf(game.level) + dir + 3) % 3]; }
-const menuRect = i => { const w = Math.min(440, W - 40); return { x: W / 2 - w / 2, y: 258 + i * (compact ? 56 : 52), w, h: compact ? 48 : 44 }; };
+const menuRect = i => { const w = Math.min(440, W - 40); return { x: W / 2 - w / 2, y: 246 + i * (compact ? 49 : 46), w, h: compact ? 43 : 40 }; };
 
 function update(dt) {
   game.t += dt;
@@ -562,6 +607,9 @@ function update(dt) {
 
   if (game.state === 'title') { updateTitle(); return; }
   if (game.state === 'select') { updateSelect(dt); return; }
+  if (game.state === 'ladder') { updateLadder(dt); return; }
+  if (game.state === 'unlock') { updateUnlock(dt); return; }
+  if (game.state === 'champion') { updateChampion(dt); return; }
 
   if (pressed.has('Escape') || pressed.has('KeyP')) {
     if (game.state === 'paused') { game.state = game.prevState; return; }
@@ -631,9 +679,9 @@ function update(dt) {
     case 'matchEnd':
       updateCeremony(dt);
       if (game.ceremonyT > 2.2) {
-        const [rb, mb] = twoButtons(H - 62);
-        if (pressed.has('KeyR') || hitRect(rb, clickPos)) game.start(game.mode);
-        else if (pressed.has('Enter') || pressed.has('Space') || pressed.has('Escape') || hitRect(mb, clickPos)) game.state = 'title';
+        const [rb, mb] = twoButtons(H - 62), [b1, b2] = endButtons();
+        if (pressed.has('Enter') || pressed.has('KeyR') || pressed.has('Space') || hitRect(rb, clickPos)) b1[1]();
+        else if (pressed.has('Escape') || hitRect(mb, clickPos)) b2[1]();
       }
       break;
   }
@@ -680,15 +728,20 @@ function updateKnockdown(dt, intent) {
 }
 
 // ---------------------------------------------------------------- character select
-const CARD_H = 330, CARD_Y = 96;
-const cardW = () => (compact ? 136 : 200), cardGap = () => (compact ? 10 : 16);
-const cardX = i => W / 2 - (ROSTER.length * (cardW() + cardGap()) - cardGap()) / 2 + i * (cardW() + cardGap());
+// ---------------------------------------------------------------- character select (5 x 2 grid)
+const COLS = 5;
+const cardW = () => (compact ? 110 : 170), cardH = () => (compact ? 168 : 178), cardGap = () => (compact ? 7 : 12);
+const GRID_Y = 82;
+const cardX = i => W / 2 - (COLS * (cardW() + cardGap()) - cardGap()) / 2 + (i % COLS) * (cardW() + cardGap());
+const cardY = i => GRID_Y + Math.floor(i / COLS) * (cardH() + 12);
 
-function openSelect(mode) {
-  game.mode = mode;
+function ensurePreviews() { if (!game.previews) game.previews = ROSTER.map(l => new Fighter(l, 0)); }
+
+function openSelect(mode, ladder = false) {
+  game.mode = mode; game.ladderPick = ladder; game.ladder = null;
   game.state = 'select'; game.t = 0;
   game.sel = { p1: 0, p2: 1, r1: false, r2: false };
-  game.previews = ROSTER.map(l => new Fighter(l, 0));
+  ensurePreviews();
 }
 
 function updateSelect(dt) {
@@ -698,6 +751,11 @@ function updateSelect(dt) {
   if (pressed.has('Escape')) { game.state = 'title'; return; }
   const confirm = (who) => {
     const mine = who === 1 ? s.p1 : s.p2, other = who === 1 ? s.p2 : s.p1, otherReady = who === 1 ? s.r2 : s.r1;
+    if (!isUnlocked(mine)) {
+      Sound.tone(110, 0.2, 'square', 0.1);
+      popup('LOCKED! Win it in the Barnyard Ladder', clamp(cardX(mine) + cardW() / 2, 170, W - 170), cardY(mine) + 40, '#ff8a65', 16);
+      return;
+    }
     if (game.mode === 2 && otherReady && mine === other) { Sound.tone(120, 0.15, 'square', 0.1); return; }
     if (who === 1) s.r1 = true; else s.r2 = true;
     game.previews[mine].popV = 700; // head pops for a peek
@@ -711,24 +769,28 @@ function updateSelect(dt) {
   const ctl1 = game.mode === 1 ? SOLO_KEYS : P1_KEYS;
   if (anyOf(pressed, ctl1.left)) step(1, -1);
   if (anyOf(pressed, ctl1.right)) step(1, 1);
+  if (anyOf(pressed, game.mode === 1 ? ['KeyW', 'ArrowUp'] : ['KeyW'])) step(1, -COLS);
+  if (!s.r1 && anyOf(pressed, game.mode === 1 ? ['KeyS', 'ArrowDown'] : ['KeyS'])) step(1, COLS);
   if (!s.r1 && (anyOf(pressed, ctl1.jab) || (game.mode === 1 && (pressed.has('Enter') || pressed.has('Space'))))) confirm(1);
   else if (s.r1 && anyOf(pressed, ctl1.block)) s.r1 = false;
   if (game.mode === 2) {
     if (anyOf(pressed, P2_KEYS.left)) step(2, -1);
     if (anyOf(pressed, P2_KEYS.right)) step(2, 1);
+    if (pressed.has('ArrowUp')) step(2, -COLS);
+    if (!s.r2 && pressed.has('ArrowDown')) step(2, COLS);
     if (!s.r2 && (anyOf(pressed, P2_KEYS.jab) || pressed.has('Enter'))) confirm(2);
     else if (s.r2 && anyOf(pressed, P2_KEYS.block)) s.r2 = false;
   }
   if (clickPos) {
     ROSTER.forEach((_, i) => {
-      const x = cardX(i);
-      if (clickPos.x > x && clickPos.x < x + cardW() && clickPos.y > CARD_Y && clickPos.y < CARD_Y + CARD_H) {
+      if (hitRect({ x: cardX(i), y: cardY(i), w: cardW(), h: cardH() }, clickPos)) {
         if (!s.r1) { s.p1 = i; confirm(1); } else if (game.mode === 2 && !s.r2) { s.p2 = i; confirm(2); }
       }
     });
   }
+  if (game.ladderPick && s.r1) { buildLadder(s.p1); return; }
   if (game.mode === 1 && s.r1 && !s.r2) {
-    const others = ROSTER.map((_, i) => i).filter(i => i !== s.p1);
+    const others = ROSTER.map((_, i) => i).filter(i => i !== s.p1 && isUnlocked(i));
     s.p2 = others[Math.floor(rand(others.length))]; s.r2 = true; s.readyT = game.t;
   }
   if (s.r1 && s.r2) {
@@ -737,48 +799,219 @@ function updateSelect(dt) {
   } else s.readyT = undefined;
 }
 
+// draw a roster fighter small, as a silhouette if still locked
+function drawMini(i, x, groundY, sc, silhouette) {
+  ensurePreviews();
+  const f = game.previews[i];
+  f.x = 0; f.facing = 1; f.state = 'idle';
+  ctx.save();
+  ctx.translate(x, groundY); ctx.scale(sc, sc); ctx.translate(0, -GROUND);
+  if (silhouette) ctx.filter = 'brightness(0) opacity(0.75)';
+  drawFighter(f);
+  ctx.restore();
+  ctx.filter = 'none';
+}
+
 function drawSelect() {
   inWorld((WW - W) / 2, drawBackground);
-  ctx.fillStyle = 'rgba(10,5,2,0.7)'; ctx.fillRect(0, 0, W, H);
-  text('CHOOSE YOUR MASCOT', W / 2, 52, fz(44), '#ffe08a', 'center', '#3a0606');
-  const s = game.sel, CW = cardW();
+  ctx.fillStyle = 'rgba(10,5,2,0.72)'; ctx.fillRect(0, 0, W, H);
+  text(game.ladderPick ? 'PICK YOUR LADDER FIGHTER' : 'CHOOSE YOUR MASCOT', W / 2, 42, fz(40), '#ffe08a', 'center', '#3a0606');
+  const s = game.sel, CW = cardW(), CH = cardH();
   ROSTER.forEach((L, i) => {
-    const x = cardX(i), h1 = s.p1 === i, h2 = s.p2 === i && (game.mode === 2 || s.r2);
-    roundRect(x, CARD_Y, CW, CARD_H, 14, h1 || h2 ? '#3a1d10' : '#1c120bdd', h1 && h2 ? '#c792ea' : h1 ? '#ff5a3c' : h2 ? '#4f9dff' : '#ffffff30', h1 || h2 ? 5 : 2);
-    const f = game.previews[i];
-    f.x = 0; f.facing = 1; f.state = 'idle';
-    const sc = compact ? 0.62 : 0.82;
-    ctx.save();
-    ctx.translate(x + CW / 2 - 8, CARD_Y + 236); ctx.scale(sc, sc); ctx.translate(0, -GROUND);
-    drawFighter(f);
-    ctx.restore();
-    if (compact) {
-      text(L.name.replace(' BRUISER', ''), x + CW / 2, CARD_Y + 262, 19, '#fff');
-      text(L.suit, x + CW / 2, CARD_Y + 286, 13, '#e8c15a', 'center', null, 700);
-      text('inside: ' + L.person.name, x + CW / 2, CARD_Y + 306, 12, '#bbb', 'center', null, 600);
+    const x = cardX(i), y = cardY(i), open = isUnlocked(i);
+    const h1 = s.p1 === i, h2 = s.p2 === i && (game.mode === 2 || s.r2) && !game.ladderPick;
+    roundRect(x, y, CW, CH, 12, h1 || h2 ? '#3a1d10' : '#1c120bdd', h1 && h2 ? '#c792ea' : h1 ? '#ff5a3c' : h2 ? '#4f9dff' : '#ffffff30', h1 || h2 ? 4 : 2);
+    drawMini(i, x + CW / 2 - 6, y + (compact ? 118 : 128), compact ? 0.38 : 0.5, !open);
+    const name = compact ? L.name.replace(' BRUISER', '').replace('GOLDEN ', 'GOLD ') : L.name;
+    if (open) {
+      text(name, x + CW / 2, y + CH - 40, compact ? 13 : 16, '#fff', 'center', '#000', 900);
+      text(L.suit.replace('Gold-plated g', 'G'), x + CW / 2, y + CH - 20, compact ? 10 : 11, '#e8c15a', 'center', null, 700);
     } else {
-      text(L.name, x + CW / 2, CARD_Y + 262, L.name.length > 10 ? 19 : 24, '#fff');
-      text(L.suit + ' · ' + L.special, x + CW / 2, CARD_Y + 285, 11, '#e8c15a', 'center', null, 700);
-      text('inside: ' + L.person.bio, x + CW / 2, CARD_Y + 305, 11, '#bbb', 'center', null, 600);
+      text('🔒 ???', x + CW / 2, y + CH - 40, compact ? 14 : 17, '#bbb', 'center', '#000', 900);
+      text(L.boss ? 'Beat the Ladder' : 'Win in Ladder', x + CW / 2, y + CH - 20, compact ? 10 : 11, '#ff8a65', 'center', null, 700);
     }
     const tags = [];
     if (h1) tags.push([game.mode === 1 ? 'YOU' : 'P1', '#ff5a3c', s.r1]);
     if (h2) tags.push([game.mode === 1 ? 'CPU' : 'P2', '#4f9dff', s.r2]);
     tags.forEach(([t, c, r], k) => {
-      const tx = x + CW / 2 + (tags.length > 1 ? (k ? 34 : -34) : 0);
-      roundRect(tx - 32, CARD_Y - 14, 64, 26, 13, r ? c : '#000', c, 3);
-      text(r ? t + ' ✓' : t, tx, CARD_Y - 1, 14, '#fff', 'center', null, 800);
+      const tx = x + CW / 2 + (tags.length > 1 ? (k ? 28 : -28) : 0);
+      roundRect(tx - 27, y - 11, 54, 22, 11, r ? c : '#000', c, 2);
+      text(r ? t + ' ✓' : t, tx, y, 12, '#fff', 'center', null, 800);
     });
   });
-  if (compact) {
-    const L = ROSTER[s.p1];
-    text(`${L.name}: ${L.person.bio} · ${L.special}`, W / 2, CARD_Y + CARD_H + 26, 14, '#e8c15a', 'center', null, 700);
-  }
+  const L = ROSTER[s.p1];
+  const info = isUnlocked(s.p1) ? `${L.name} — inside: ${L.person.bio} — special: ${L.special}` : 'LOCKED — climb the Barnyard Ladder to unlock this fighter';
+  text(info, W / 2, cardY(5) + CH + 18, fz(15), '#e8c15a', 'center', '#000', 700);
+  text(`${ROSTER.filter((_, i) => isUnlocked(i)).length}/${ROSTER.length} fighters unlocked`, W / 2, cardY(5) + CH + 40, 12, '#aaa', 'center', null, 600);
   const help = isTouch ? 'Tap a mascot to pick it'
-    : game.mode === 1 ? '←/→ or A/D to choose · Enter / F / click to pick · Esc = back'
-    : compact ? 'P1: A/D + F    P2: ←/→ + J    Esc = back'
-    : 'P1: A/D choose, F pick, S undo      P2: ←/→ choose, J pick, ↓ undo      Esc = back';
-  text(help, W / 2, H - 40, fz(16), '#ddd', 'center', null, 700);
+    : game.mode === 1 ? 'Arrows or WASD to choose · Enter / F / click to pick · Esc = back'
+    : 'P1: WASD + F (S undo)      P2: arrows + J (↓ undo)      Esc = back';
+  text(help, W / 2, H - 14, fz(14), '#ddd', 'center', null, 700);
+}
+
+// ---------------------------------------------------------------- the Barnyard Ladder
+const LADDER_LEVELS = ['EASY', 'EASY', 'NORMAL', 'NORMAL', 'HARD', 'BOSS'];
+const LADDER_LABELS = ['ROUND 1', 'ROUND 2', 'QUARTERFINAL', 'SEMIFINAL', 'CHALLENGER', 'CHAMPIONSHIP'];
+
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+function buildLadder(pi) {
+  const all = ROSTER.map((_, i) => i);
+  const pool = shuffle(all.filter(i => i !== pi && isUnlocked(i) && !ROSTER[i].boss));
+  const rungs = [];
+  for (let k = 0; k < 4; k++) rungs.push(pool[k % pool.length]);
+  // rung 5: the next locked barnyard fighter — beat them to unlock them
+  const challenger = all.find(i => ROSTER[i].locked && !ROSTER[i].boss && !isUnlocked(i) && i !== pi);
+  rungs.push(challenger !== undefined ? challenger : (pool.find(i => !rungs.includes(i)) ?? pool[0]));
+  // rung 6: the Golden Goose (or a fresh opponent if you ARE the goose)
+  const boss = all.find(i => ROSTER[i].boss);
+  rungs.push(boss !== pi ? boss : (shuffle(pool.filter(i => !rungs.includes(i)))[0] ?? pool[0]));
+  game.ladder = { player: pi, rungs, levels: LADDER_LEVELS, pos: 0 };
+  game.mode = 1; game.ladderPick = false;
+  game.state = 'ladder'; game.t = 0;
+  Sound.fanfare(0.9);
+}
+
+const ladderQuitBtn = () => ({ x: 12, y: 12, w: 92, h: 36 });
+
+function updateLadder(dt) {
+  ensurePreviews();
+  game.previews.forEach(f => { f.t += dt; f.updatePop(dt, 0); });
+  updateFx(dt);
+  const L = game.ladder;
+  if (pressed.has('Escape') || hitRect(ladderQuitBtn(), clickPos)) { game.ladder = null; game.state = 'title'; return; }
+  if (game.t > 0.3 && (clickPos || pressed.has('Enter') || pressed.has('Space') || pressed.has('KeyF') || pressed.has('KeyJ'))) {
+    game.sel = { p1: L.player, p2: L.rungs[L.pos] };
+    game.start(1);
+  }
+}
+
+function drawLadder() {
+  inWorld((WW - W) / 2, drawBackground);
+  ctx.fillStyle = 'rgba(10,5,2,0.76)'; ctx.fillRect(0, 0, W, H);
+  const Ld = game.ladder, n = Ld.rungs.length;
+  text('BARNYARD LADDER', W / 2, 36, fz(40), '#ffe08a', 'center', '#3a0606');
+  roundRect(12, 12, 92, 36, 10, '#000a', '#ffffff50', 2);
+  text(isTouch ? '✕ QUIT' : 'ESC: QUIT', 58, 31, 13, '#ddd', 'center', null, 800);
+  const rh = compact ? 58 : 56, gap = 8, top = 70;
+  const lx = compact ? 26 : 330, lw = compact ? W - 52 : 560;
+  if (!compact) { // your fighter, big, on the left
+    const me = game.previews[Ld.player];
+    drawMini(Ld.player, 160, 450, 0.95, false);
+    text('YOU', 160, 470, 16, '#ff8a80', 'center', '#000', 800);
+    text(ROSTER[Ld.player].name, 160, 492, 22, '#fff');
+    me.taunt = false;
+  }
+  // ladder rails
+  ctx.fillStyle = '#7a4a24';
+  ctx.fillRect(lx - 14, top - 10, 9, n * (rh + gap) + 12); ctx.fillRect(lx + lw + 5, top - 10, 9, n * (rh + gap) + 12);
+  for (let k = n - 1; k >= 0; k--) {
+    const y = top + (n - 1 - k) * (rh + gap);
+    const i = Ld.rungs[k], R = ROSTER[i];
+    const done = k < Ld.pos, cur = k === Ld.pos;
+    const hidden = !isUnlocked(i) && !done;
+    const pulse = cur ? 0.5 + Math.sin(game.t * 6) * 0.5 : 0;
+    roundRect(lx, y, lw, rh, 10, done ? '#1d3a1fdd' : cur ? '#5a2a10' : '#1c120bdd', cur ? `rgba(255,224,138,${0.6 + pulse * 0.4})` : done ? '#4caf50' : '#ffffff25', cur ? 4 : 2);
+    text(LADDER_LABELS[k], lx + 12, y + 18, 12, k >= 4 ? '#ffcc80' : '#c9b37a', 'left', null, 800);
+    text(Ld.levels[k], lx + 12, y + 38, 12, Ld.levels[k] === 'BOSS' ? '#ff5252' : Ld.levels[k] === 'HARD' ? '#ff9800' : '#9ecbff', 'left', null, 700);
+    // opponent's head and shoulders peeking from the rung
+    ctx.save(); ctx.beginPath(); ctx.roundRect(lx + 2, y + 2, lw - 4, rh - 4, 9); ctx.clip();
+    drawMini(i, lx + (compact ? 150 : 160), y + rh + 34, 0.36, hidden);
+    ctx.restore();
+    const nx = lx + (compact ? 196 : 210);
+    text(hidden ? '??? MYSTERY FIGHTER' : R.name, nx, y + rh / 2 - 6, compact ? 15 : 18, hidden ? '#bbb' : '#fff', 'left', '#000', 900);
+    const sub = hidden ? (R.boss ? 'beat them to unlock!' : 'beat them to unlock!') : `"${NICKNAMES[R.name] || ''}"`;
+    text(sub, nx, y + rh / 2 + 14, 11, hidden ? '#ff8a65' : '#c9b37a', 'left', null, 600);
+    if (done) text('✓', lx + lw - 24, y + rh / 2, 28, '#7ee07e', 'center', '#000', 900);
+    else if (cur) text('▶', lx + lw - 24 + Math.sin(game.t * 8) * 3, y + rh / 2, 24, '#ffe08a', 'center', '#000', 900);
+    else if (hidden) text('🔒', lx + lw - 24, y + rh / 2, 20, '#fff', 'center', null, 900);
+  }
+  text(isTouch ? `Tap to fight: ${LADDER_LABELS[Ld.pos]}` : `Enter: fight ${LADDER_LABELS[Ld.pos]}`, W / 2, H - 22, fz(20), '#ffe066', 'center', '#000', 800);
+}
+
+// after a ladder match
+function ladderContinue() {
+  const L = game.ladder;
+  const opp = L.rungs[L.pos];
+  L.pos++;
+  const finished = L.pos >= L.rungs.length;
+  game.afterUnlock = finished ? 'champion' : 'ladder';
+  if (!isUnlocked(opp)) { unlockFighter(opp); showUnlock(opp); }
+  else if (finished) showChampion();
+  else { game.state = 'ladder'; game.t = 0; }
+}
+function showUnlock(i) {
+  game.unlockIdx = i; game.state = 'unlock'; game.t = 0;
+  game.unlockFighter = new Fighter(ROSTER[i], 0);
+  Sound.fanfare(); Sound.crowd(0.35);
+  for (const c of ['#ff5252', '#ffd54f', '#69f0ae', '#40c4ff', '#e040fb']) feathers(WW / 2, 160, 12, c);
+}
+function showChampion() {
+  game.state = 'champion'; game.t = 0;
+  game.champFighter = new Fighter(ROSTER[game.ladder.player], 0);
+  game.champFighter.taunt = true;
+  Sound.bell(3); Sound.fanfare(); Sound.call(ROSTER[game.ladder.player]); Sound.crowd(0.5);
+}
+function updateUnlock(dt) {
+  const f = game.unlockFighter;
+  f.t += dt; f.updatePop(dt, (game.t % 3) > 2 ? 100 : 0);
+  if (Math.random() < dt * 5) feathers(WW / 2 + rand(-300, 300), 40, 2, ['#ff5252', '#ffd54f', '#69f0ae', '#40c4ff'][Math.floor(rand(4))]);
+  updateFx(dt);
+  if (game.t > 1 && (clickPos || pressed.has('Enter') || pressed.has('Space') || pressed.has('KeyF') || pressed.has('KeyJ'))) {
+    if (game.afterUnlock === 'champion') showChampion(); else { game.state = 'ladder'; game.t = 0; }
+  }
+}
+function updateChampion(dt) {
+  game.champFighter.t += dt;
+  if (Math.random() < dt * 8) feathers(WW / 2 + rand(-400, 400), 30, 2, ['#ff5252', '#ffd54f', '#69f0ae', '#40c4ff', '#ffd700'][Math.floor(rand(5))]);
+  updateFx(dt);
+  if (game.t > 1.5 && (clickPos || pressed.has('Enter') || pressed.has('Space') || pressed.has('Escape'))) { game.ladder = null; game.state = 'title'; }
+}
+function drawUnlock() {
+  inWorld((WW - W) / 2, () => { drawBackground(); drawParticles(); });
+  ctx.fillStyle = 'rgba(10,5,2,0.6)'; ctx.fillRect(0, 0, W, H);
+  const L = ROSTER[game.unlockIdx], f = game.unlockFighter;
+  const s = easeOut(Math.min(1, game.t * 2.5));
+  text('NEW FIGHTER UNLOCKED!', W / 2, 52, fz(46) * (0.5 + 0.5 * s), '#ffe066', 'center', '#3a0606');
+  f.x = 0; f.facing = 1; f.state = 'idle';
+  ctx.save(); ctx.translate(compact ? W / 2 : W / 2 - 230, 420); ctx.scale(1.05, 1.05); ctx.translate(0, -GROUND); drawFighter(f); ctx.restore();
+  const tx = compact ? W / 2 : W / 2 - 80, al = compact ? 'center' : 'left', ty = compact ? 448 : 170;
+  text(L.name, tx, ty, fz(44), '#fff', al);
+  text(`"${NICKNAMES[L.name] || ''}"`, tx, ty + (compact ? 30 : 42), compact ? 14 : 20, '#e8c15a', al, '#000', 700);
+  if (!compact) {
+    text(L.suit, tx, ty + 82, 18, '#ddd', al, '#000', 700);
+    text('Inside: ' + L.person.bio, tx, ty + 110, 18, '#ddd', al, '#000', 700);
+    text('Special: ' + L.special, tx, ty + 138, 18, '#ffcc80', al, '#000', 700);
+  }
+  if (game.t > 1) text(isTouch ? 'tap to continue' : 'Enter to continue', W / 2, H - 22, 16, '#fff', 'center', '#000', 700);
+}
+function drawChampion() {
+  inWorld((WW - W) / 2, () => { drawBackground(); drawParticles(); });
+  ctx.fillStyle = 'rgba(10,5,2,0.5)'; ctx.fillRect(0, 0, W, H);
+  const bounce = Math.sin(game.t * 3) * 5;
+  text('BARNYARD', W / 2, 60 + bounce, fz(64), '#ffe066', 'center', '#3a0606');
+  text('CHAMPION!', W / 2, 124 + bounce, fz(64), '#ff5a3c', 'center', '#3a0606');
+  // trophy
+  const cx = W / 2 + (compact ? 150 : 240), cy = 330;
+  ctx.fillStyle = '#ffd700'; ctx.strokeStyle = '#a07800'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(cx - 44, cy - 70); ctx.lineTo(cx + 44, cy - 70); ctx.quadraticCurveTo(cx + 40, cy, cx, cy + 6); ctx.quadraticCurveTo(cx - 40, cy, cx - 44, cy - 70); ctx.fill(); ctx.stroke();
+  ctx.lineWidth = 7; ctx.beginPath(); ctx.arc(cx - 44, cy - 46, 16, Math.PI * 0.5, Math.PI * 1.5); ctx.stroke(); ctx.beginPath(); ctx.arc(cx + 44, cy - 46, 16, -Math.PI * 0.5, Math.PI * 0.5); ctx.stroke();
+  ctx.fillStyle = '#ffd700'; ctx.fillRect(cx - 8, cy + 4, 16, 30); ctx.fillRect(cx - 34, cy + 32, 68, 14);
+  text('🥚', cx, cy - 38, 30, '#fff', 'center', null, 900);
+  const f = game.champFighter;
+  f.x = 0; f.facing = 1; f.state = 'idle';
+  ctx.save(); ctx.translate(compact ? W / 2 - 110 : W / 2 - 120, 440); ctx.translate(0, -GROUND); drawFighter(f); ctx.restore();
+  const n = ROSTER.filter((_, i) => isUnlocked(i)).length;
+  text(`${ROSTER[game.ladder.player].name} conquered the ladder! · ${n}/${ROSTER.length} fighters unlocked`, W / 2, 480, fz(18), '#fff', 'center', '#000', 700);
+  if (game.t > 1.5) text(isTouch ? 'tap to return to the menu' : 'Enter to return to the menu', W / 2, H - 18, 15, '#ddd', 'center', '#000', 700);
+}
+
+// buttons at the end of a match: [label, action]
+function endButtons() {
+  const w = game.winner, youWon = !!w && w.side === 0;
+  const quit = () => { game.ladder = null; game.state = 'title'; };
+  if (game.ladder) return youWon ? [['NEXT ▶', ladderContinue], ['QUIT', quit]] : [['RETRY', () => game.start(1)], ['QUIT', quit]];
+  return [['REMATCH', () => game.start(game.mode)], ['MENU', quit]];
 }
 
 // ---------------------------------------------------------------- referee (a person in a zebra suit)
@@ -877,7 +1110,9 @@ function drawReferee() {
 }
 
 // ---------------------------------------------------------------- ring entrances (before round 1)
-const NICKNAMES = { NUGGET: 'The Crispy Crusher', 'BIG RED': 'The Cock-a-Doodle-Doom', 'BESSIE BRUISER': 'The Moo-ving Mountain', HAMHOCK: 'The Hog of War' };
+const NICKNAMES = { NUGGET: 'The Crispy Crusher', 'BIG RED': 'The Cock-a-Doodle-Doom', 'BESSIE BRUISER': 'The Moo-ving Mountain', HAMHOCK: 'The Hog of War',
+  PUDDLES: 'The Quackhammer', 'BILLY BUTTZ': 'The Battering Ram... Technically a Goat', 'BAA-BARIAN': 'The Wool Wrecker', GOBBLES: 'The Thanksgiving Terror',
+  'NEIGH-SAYER': 'The Unstable Stallion', 'GOLDEN GOOSE': 'Owner of the Barn' };
 const E_P1 = 0.5, E_P2 = 4.2, E_REF = 7.9, E_END = 10.4;
 const homeX = f => (f.side === 0 ? RING_L + 130 : RING_R - 130);
 
@@ -1224,6 +1459,7 @@ function drawPerson(P, px, py, f, pop) {
   // hair behind head
   if (P.style === 'puff') circle(x - 4, y - 14, 15, P.hair);
   if (P.style === 'bun') circle(x - 14, y - 12, 7, P.hair);
+  if (P.style === 'long') roundRect(x - 17, y - 10, 15, 30, 7, P.hair);
   // ear + face
   circle(x, y, 15, P.skin);
   ellipse(x - 2, y + 1, 4, 5, shadeColor(P.skin, -25));
@@ -1232,7 +1468,7 @@ function drawPerson(P, px, py, f, pop) {
   // hair on top
   ctx.fillStyle = P.hair;
   if (P.style === 'short') { ctx.beginPath(); ctx.arc(x, y - 2, 16, Math.PI * 1.02, Math.PI * 1.95); ctx.fill(); }
-  if (P.style === 'bun' || P.style === 'puff') { ctx.beginPath(); ctx.arc(x, y - 1, 15.5, Math.PI * 1.0, Math.PI * 1.75); ctx.fill(); }
+  if (P.style === 'bun' || P.style === 'puff' || P.style === 'long') { ctx.beginPath(); ctx.arc(x, y - 1, 15.5, Math.PI * 1.0, Math.PI * 1.75); ctx.fill(); }
   if (P.style === 'bald') {
     ctx.beginPath(); ctx.arc(x - 3, y + 1, 15.5, Math.PI * 0.75, Math.PI * 1.1); ctx.fill(); // fringe
     ellipse(x + 3, y - 10, 5, 2.5, 'rgba(255,255,255,.5)', -0.3); // shiny dome
@@ -1291,13 +1527,60 @@ function drawMascotHead(L, x, y, f, tilt) {
     ellipse(29, 4, 9, 13, L.comb);
     ellipse(31, 0, 2.5, 3.5, '#a3405c'); ellipse(31, 9, 2.5, 3.5, '#a3405c');
     ctx.strokeStyle = '#a3405c'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(14, 16, 6, 0.2, 2.2); ctx.stroke();
+  } else if (t === 'duck') {
+    [[-6, -27, 6], [1, -31, 5], [7, -27, 5]].forEach(([cx, cy, r]) => circle(cx, cy, r, L.shade));
+    circle(0, 0, 29, L.body);
+    ellipse(32, 6, 19, 7, L.comb); ellipse(29, 11, 15, 5, shadeColor(L.comb, -40));
+    circle(40, 3, 1.6, '#7a3d00');
+  } else if (t === 'goose') {
+    ellipse(0, 0, 26, 30, L.body);
+    ctx.fillStyle = L.comb;
+    ctx.beginPath(); ctx.moveTo(20, -6); ctx.lineTo(50, 4); ctx.lineTo(20, 12); ctx.closePath(); ctx.fill();
+    circle(22, -5, 6, '#3a2a00');
+    ellipse(-8, -14, 6, 10, 'rgba(255,255,255,.45)', -0.4); // golden sheen
+    // crown
+    ctx.fillStyle = '#ffd700'; ctx.strokeStyle = '#a07800'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-16, -26); ctx.lineTo(-16, -44); ctx.lineTo(-8, -34); ctx.lineTo(0, -48); ctx.lineTo(8, -34); ctx.lineTo(16, -44); ctx.lineTo(16, -26); ctx.closePath(); ctx.fill(); ctx.stroke();
+    circle(0, -32, 3, '#e53935'); circle(-10, -31, 2.2, '#1e88e5'); circle(10, -31, 2.2, '#43a047');
+  } else if (t === 'turkey') {
+    circle(0, 2, 26, L.head);
+    ellipse(4, -4, 13, 11, '#90caf9');
+    ctx.fillStyle = '#f9a825';
+    ctx.beginPath(); ctx.moveTo(20, -3); ctx.lineTo(36, 3); ctx.lineTo(20, 9); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = L.comb; ctx.lineWidth = 6; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(18, -12); ctx.quadraticCurveTo(34, -10, 32, 16); ctx.stroke(); // snood
+    ellipse(20, 22, 7, 14, L.comb); // wattle
+  } else if (t === 'goat') {
+    ctx.strokeStyle = '#8d6e63'; ctx.lineWidth = 7; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-4, -24); ctx.quadraticCurveTo(-22, -46, -34, -20); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(6, -26); ctx.quadraticCurveTo(-10, -52, -24, -30); ctx.stroke();
+    ellipse(-22, -4, 14, 6, L.shade, 0.3);
+    ellipse(0, 0, 26, 29, L.body);
+    ellipse(20, 10, 14, 12, L.shade);
+    ellipse(28, 7, 2, 3, '#5d4037');
+    ctx.fillStyle = '#d7ccc8';
+    ctx.beginPath(); ctx.moveTo(10, 20); ctx.lineTo(24, 20); ctx.lineTo(15, 42); ctx.closePath(); ctx.fill(); // beard
+  } else if (t === 'sheep') {
+    ellipse(-20, 4, 14, 6, L.face, 0.5);
+    ellipse(4, 2, 23, 27, L.face);
+    [[-16, -20], [-4, -28], [9, -25], [-22, -6], [18, -18]].forEach(([cx, cy]) => circle(cx, cy, 11, L.body));
+    ellipse(22, 14, 6, 4, '#555');
+  } else if (t === 'horse') {
+    ctx.fillStyle = L.shade;
+    ctx.beginPath(); ctx.moveTo(-10, -22); ctx.lineTo(-12, -46); ctx.lineTo(2, -26); ctx.fill();
+    ellipse(-2, -2, 25, 29, L.body);
+    ellipse(22, 14, 18, 13, L.shade);
+    ellipse(32, 11, 2.5, 3.5, '#2b1a10');
+    ctx.strokeStyle = L.mane; ctx.lineWidth = 9; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-6, -28); ctx.quadraticCurveTo(-30, -18, -26, 26); ctx.stroke(); // mane
+    ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(-2, -28); ctx.lineTo(10, -22); ctx.stroke(); // forelock
   }
   // big fixed mascot eyes with jiggly pupils
   const jx = clamp(f.popV * 0.004, -3, 3), jy = clamp(Math.sin(game.t * 23) * f.popV * 0.004, -3, 3);
   circle(9, -8, 10, '#fff');
   ctx.strokeStyle = '#0004'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(9, -8, 10, 0, 7); ctx.stroke();
-  circle(12 + jx, -8 + jy, 4.5, '#111');
-  circle(13 + jx, -10 + jy, 1.5, '#fff');
+  if (t === 'goat') roundRect(8 + jx, -10 + jy, 9, 4, 2, '#111'); // sideways goat pupils
+  else { circle(12 + jx, -8 + jy, 4.5, '#111'); circle(13 + jx, -10 + jy, 1.5, '#fff'); }
   // felt eyebrow
   ctx.strokeStyle = shadeColor(L.shade, -60); ctx.lineWidth = 4; ctx.lineCap = 'round';
   ctx.beginPath(); ctx.moveTo(0, -21); ctx.lineTo(18, -16); ctx.stroke();
@@ -1305,13 +1588,16 @@ function drawMascotHead(L, x, y, f, tilt) {
 }
 
 function drawLegs(L, p, lean, by) {
-  const bird = L.type === 'chicken' || L.type === 'rooster';
+  const bird = BIRDS.includes(L.type), webbed = L.type === 'duck' || L.type === 'goose';
   ctx.lineCap = 'round';
   for (const [lx, ph] of [[-11, p.legPhase], [11, -p.legPhase]]) {
     const fx = lx + ph * 14 + lean * 0.2, fy = -Math.max(0, ph) * 6;
-    ctx.strokeStyle = bird ? '#f39c12' : L.body; ctx.lineWidth = bird ? 8 : 13;
+    ctx.strokeStyle = bird ? (L.legs || '#f39c12') : (L.legs || L.body); ctx.lineWidth = bird ? 8 : 13;
     ctx.beginPath(); ctx.moveTo(lx + lean * 0.4, -48 + by * 0.5); ctx.lineTo(fx, fy - 4); ctx.stroke();
-    if (bird) {
+    if (webbed) {
+      ctx.fillStyle = L.legs || '#f39c12';
+      ctx.beginPath(); ctx.moveTo(fx - 4, fy - 3); ctx.lineTo(fx + 20, fy - 2); ctx.lineTo(fx + 16, fy + 3); ctx.lineTo(fx - 6, fy + 3); ctx.closePath(); ctx.fill();
+    } else if (bird) {
       ctx.lineWidth = 5;
       ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(fx + 16, fy + 1); ctx.moveTo(fx, fy); ctx.lineTo(fx - 8, fy + 1); ctx.moveTo(fx, fy); ctx.lineTo(fx + 10, fy - 5); ctx.stroke();
     } else {
@@ -1322,7 +1608,19 @@ function drawLegs(L, p, lean, by) {
 }
 
 function drawTail(L, bx, byy) {
-  if (L.tail) {
+  if (L.type === 'turkey') { // big fan
+    for (let i = 0; i < 9; i++) {
+      const a = -Math.PI * 0.95 + i * 0.16;
+      ellipse(bx - 16 + Math.cos(a) * 46, byy - 16 + Math.sin(a) * 46, 11, 30, L.tail[i % L.tail.length], a + Math.PI / 2);
+    }
+  } else if (L.type === 'horse') {
+    ctx.strokeStyle = L.mane; ctx.lineWidth = 13; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(bx - 32, byy - 18); ctx.quadraticCurveTo(bx - 66, byy, bx - 56, byy + 42); ctx.stroke();
+  } else if (L.type === 'goat') {
+    ellipse(bx - 38, byy - 26, 6, 12, L.shade, -0.7);
+  } else if (L.type === 'sheep') {
+    circle(bx - 40, byy - 10, 11, L.body);
+  } else if (L.tail) {
     L.tail.forEach((c, i) => ellipse(bx - 36 - i * 4, byy - 18 - i * 12, 12, 28, c, -0.5 - i * 0.35));
   } else if (L.type === 'cow') {
     ctx.strokeStyle = L.shade; ctx.lineWidth = 4;
@@ -1366,6 +1664,7 @@ function drawFighter(f) {
 
   drawTail(L, bx, byy);
   // suit body
+  if (L.type === 'sheep') for (let a = 0; a < 6.28; a += 0.45) circle(bx + Math.cos(a) * 36, byy + Math.sin(a) * 43, 11, L.body); // wool
   ellipse(bx, byy, 38, 46, L.body);
   ctx.save();
   ctx.beginPath(); ctx.ellipse(bx, byy, 38, 46, 0, 0, Math.PI * 2); ctx.clip();
@@ -1530,7 +1829,10 @@ function draw() {
   ctx.save();
   if (shake > 0) ctx.translate(rand(-shake, shake), rand(-shake, shake));
   if (game.state === 'title') { drawTitle(); ctx.restore(); return; }
-  if (game.state === 'select') { drawSelect(); inWorld((WW - W) / 2, drawParticles); ctx.restore(); return; }
+  if (game.state === 'select') { drawSelect(); drawParticles(); ctx.restore(); return; }
+  if (game.state === 'ladder') { drawLadder(); ctx.restore(); return; }
+  if (game.state === 'unlock') { drawUnlock(); ctx.restore(); return; }
+  if (game.state === 'champion') { drawChampion(); ctx.restore(); return; }
 
   inWorld(game.camX || 0, () => {
     drawBackground();
@@ -1577,14 +1879,16 @@ function draw() {
         else {
           const pop = easeOut(Math.min(1, (ct - 1.1) * 4));
           text(w.look.name + '!', W / 2, 88, fz(64) * (0.6 + 0.4 * pop), '#ffe066', 'center', '#3a0606');
-          const sub = game.mode === 1 ? (w.side === 0 ? 'You are the Champion of the Coop! 🏆' : 'You got plucked. Try again!') : `${game.playerLabel(w)} rules the roost!`;
+          let sub = game.mode === 1 ? (w.side === 0 ? 'You are the Champion of the Coop! 🏆' : 'You got plucked. Try again!') : `${game.playerLabel(w)} rules the roost!`;
+          if (game.ladder) sub = w.side === 0 ? `${LADDER_LABELS[game.ladder.pos]} cleared! (${game.ladder.pos + 1}/${game.ladder.rungs.length})` : 'Knocked off the ladder. Climb back on!';
           text(sub, W / 2, 144, fz(24), '#fff');
         }
       }
       if (ct > 2.2) {
         const [rb, mb] = twoButtons(H - 62);
-        drawButton(rb, isTouch ? 'REMATCH' : 'REMATCH (R)', true);
-        drawButton(mb, isTouch ? 'MENU' : 'MENU (Enter)', false);
+        const [b1, b2] = endButtons();
+        drawButton(rb, isTouch ? b1[0] : b1[0] + ' (Enter)', true);
+        drawButton(mb, isTouch ? b2[0] : b2[0] + ' (Esc)', false);
       }
       break;
     }
